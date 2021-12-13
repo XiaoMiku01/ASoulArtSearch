@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-SOUL二创图片搜索</title>
+    <style>
+        #content {
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        选择图片：<input type="file" name="file" id="file" accept="image/*">
+        <input type="submit" value="查找" id="btn3">
+        <div id="result"></div>
+    </div>
+</body>
+<script>
+    var btn3 = document.getElementById('btn3');
+    var result = document.getElementById('result');
+    async function postFile() {
+        var formdata = new FormData();
+        if (document.getElementById('file').files.length > 0) {
+            formdata.append('file', document.getElementById('file').files[0]);
+            document.getElementById('file').value = '';
+        }
+        else {
+            alert('请选择图片');
+            return;
+        }
+        var requestOptions = {
+            method: 'POST',
+            body: formdata,
+            redirect: 'follow'
+        };
+        fetch("/api/uploadfile", requestOptions)
+            .then(response => response.json())
+            .then(resultdata => addResult(resultdata))
+            .catch(error => console.log('error', error));
+    }
+    async function addResult(resultdata) {
+        var childs = result.childNodes;
+        for (var i = childs.length - 1; i >= 0; i--) {
+            result.removeChild(childs[i]);
+        };
+        if (resultdata.code != 0) {
+            let p = document.createElement('p');
+            p.innerHTML = resultdata.message;
+            result.appendChild(p);
+            return;
+        }
+        for (var i = 0; i < resultdata.data.length; i++) {
+            var a = document.createElement('a');
+            var br = document.createElement('br');
+            a.innerHTML = `https://t.bilibili.com/` + resultdata.data[i]['detail']['dynamic_id'] + `相似度：` + resultdata.data[i]['similarity'] * 100 + `%`;
+            a.href = `https://t.bilibili.com/` + resultdata.data[i]['detail']['dynamic_id'];
+            a.target = '_blank';
+            result.appendChild(a);
+            result.appendChild(br);
+        }
+    }
+    btn3.addEventListener('click', postFile);
+</script>
+
+</html>
